@@ -68,14 +68,6 @@ where country = 'Canada'
 )
 );
 
-select first_name,last_name,email from sakila.customer as cu
-join sakila.address as a
-on cu.address_id = a.address_id
-join sakila.city as c
-on a.city_id = c.city_id
-join sakila.country as co
-on c.country_id = co.country_id
-where co.country = 'Canada';
 
 -- 6.Which are films starred by the most prolific actor? Most prolific actor is defined as the actor that has acted in the most number of films. 
 -- First you will have to find the most prolific actor and then use that actor_id to find the different films that he/she starred.
@@ -91,20 +83,6 @@ select title from sakila.film
 where film_id in(
 select film_id from sakila.film_actor
 where actor_id = 88);
-
-select title from sakila.film
-where film_id in
-(select film_id from sakila.film_actor
-where actor_id in
-(SELECT a.actor_id,a.first_name,a.last_name, count(fa.actor_id) AS total_amount
-FROM sakila.film_actor as fa
-LEFT JOIN sakila.actor as a
-ON fa.actor_id = a.actor_id
-group by a.first_name
-order by total_amount desc)
-) 
- limit 1;
-
 -- I cannot select the most prolific actor in the subquery since we cannot use limit in the subquery,So what I’ve done is just just to subquery seperatly.
 -- By first subquery we know that the actor id of the most prolofic actor is 88,then we use it directly in the second subquery.
 
@@ -115,16 +93,20 @@ select customer_id,sum(amount) from sakila.payment
 group by customer_id
 order by sum(amount) desc
 limit 1;
-
-
+-- the most profitable customer number is 526
+SELECT title FROM film
+WHERE film_id IN (
+	SELECT film_id FROM inventory
+    WHERE store_id IN(
+		SELECT store_id  FROM customer
+        WHERE customer_id=526));
+-- we select the film which is rented by this customer by fix the customer_id
 
 -- 8.Customers who spent more than the average payments.
-select customer_id from sakila.payment 
-where subtotal
-(
-select avg(x.subtotal) from 
-(
-select customer_id,sum(amount) as subtotal from sakila.payment
-group by customer_id
-)x
-)y;
+select customer_id ,avg(amount) from sakila.payment; 
+-- the average payment is around 4.20
+SELECT customer_id, first_name, last_name FROM customer
+WHERE customer_id IN (
+	SELECT customer_id FROM payment
+    WHERE amount > 4.20);
+
